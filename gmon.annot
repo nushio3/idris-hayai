@@ -1,0 +1,1937 @@
+*** File /home/kiwamu/src/idris-hayai/rts_orig/idris_gc.c:
+                #include "idris_rts.h"
+                #include "idris_gc.h"
+                #include <assert.h>
+                
+        2415 -> VAL copy(VM* vm, VAL x) {
+                    int i, ar;
+                    Closure* cl = NULL;
+                    if (x==NULL || ISINT(x)) {
+                        return x;
+                    }
+                    switch(GETTY(x)) {
+                    case CON:
+                        ar = CARITY(x);
+                        allocCon(cl, vm, CTAG(x), ar, 1);
+                        for(i = 0; i < ar; ++i) {
+                //            *argptr = copy(vm, *((VAL*)(x->info.c.args)+i)); // recursive version
+                            cl->info.c.args[i] = x->info.c.args[i];
+                        }
+                        break;
+                    case FLOAT:
+                        cl = MKFLOATc(vm, x->info.f);
+                        break;
+                    case STRING:
+                        cl = MKSTRc(vm, x->info.str);
+                        break;
+                    case BIGINT:
+                        cl = MKBIGMc(vm, x->info.ptr);
+                        break;
+                    case PTR:
+                        cl = MKPTRc(vm, x->info.ptr);
+                        break;
+                    case FWD:
+                        return x->info.ptr;
+                    default:
+                        break;
+                    }
+                    SETTY(x, FWD);
+                    x->info.ptr = cl;
+                    return cl;
+                }
+                
+         115 -> void cheney(VM *vm) {
+                    int i;
+                    int ar;
+                    char* scan = vm->heap;
+                  
+                    while(scan < vm->heap_next) {
+                       size_t inc = *((size_t*)scan);
+                       VAL heap_item = (VAL)(scan+sizeof(size_t));
+                       // If it's a CON, copy its arguments
+                       switch(GETTY(heap_item)) {
+                       case CON:
+                           ar = ARITY(heap_item);
+                           for(i = 0; i < ar; ++i) {
+                               // printf("Copying %d %p\n", heap_item->info.c.tag, *argptr);
+                               VAL newptr = copy(vm, heap_item->info.c.args[i]);
+                               // printf("Got %p\t\t%p %p\n", newptr, scan, vm->heap_next);
+                               heap_item->info.c.args[i] = newptr;
+                           }
+                           break;
+                       default: // Nothing to copy
+                           break;
+                       }
+                       scan += inc;
+                    }
+                    assert(scan == vm->heap_next);
+                }
+                
+         115 -> void idris_gc(VM* vm) {
+                    // printf("Collecting\n");
+                
+                    char* newheap = malloc(vm -> heap_size);
+                    char* oldheap = vm -> heap;
+                    if (vm->oldheap != NULL) free(vm->oldheap);
+                
+                    vm->heap = newheap;
+                    vm->heap_next = newheap;
+                    vm->heap_end = newheap + vm->heap_size;
+                
+                    vm->collections++;
+                
+                    VAL* root;
+                
+                    for(root = vm->valstack; root < vm->valstack_top; ++root) {
+                        *root = copy(vm, *root);
+                    }
+                    for(root = vm->inbox_ptr; root < vm->inbox_write; ++root) {
+                        *root = copy(vm, *root);
+                    }
+                    for(root = vm->argv; root < vm->argv + vm->argc; ++root) {
+                        *root = copy(vm, *root);
+                    }
+                    vm->ret = copy(vm, vm->ret);
+                    vm->reg1 = copy(vm, vm->reg1);
+                
+                    cheney(vm);
+                
+                    // After reallocation, if we've still more than half filled the new heap, grow the heap
+                    // for next time.
+                
+                    if ((vm->heap_next - vm->heap) > vm->heap_size >> 1) {
+                        vm->heap_size += vm->heap_growth;
+                    } 
+                    vm->oldheap = oldheap;
+                    
+                    // gcInfo(vm, 0);
+                }
+                
+       ##### -> void idris_gcInfo(VM* vm, int doGC) {
+                    printf("\nStack: %p %p\n", vm->valstack, vm->valstack_top); 
+                    printf("Total allocations: %d\n", vm->allocations);
+                    printf("GCs: %d\n", vm->collections);
+                    printf("Final heap size %d\n", (int)(vm->heap_size));
+                    printf("Final heap use %d\n", (int)(vm->heap_next - vm->heap));
+                    if (doGC) { idris_gc(vm); }
+                    printf("Final heap use after GC %d\n", (int)(vm->heap_next - vm->heap));
+                }
+
+
+Top 10 Lines:
+
+     Line      Count
+
+        5       2415
+       42        115
+       69        115
+
+Execution Summary:
+
+        4   Executable lines in this file
+        4   Lines executed
+   100.00   Percent of the file executed
+
+     2645   Total number of line executions
+   661.25   Average executions per line
+
+
+*** File /home/kiwamu/src/idris-hayai/rts_orig/idris_stdfgn.c:
+                #include "idris_stdfgn.h"
+                #include "idris_rts.h"
+                
+           1 -> void putStr(char* str) {
+                    printf("%s", str);
+                }
+                
+       ##### -> void* fileOpen(char* name, char* mode) {
+                    FILE* f = fopen(name, mode);
+                    return (void*)f;
+                }
+                
+       ##### -> void fileClose(void* h) {
+                    FILE* f = (FILE*)h;
+                    fclose(f);
+                }
+                
+       ##### -> int fileEOF(void* h) {
+                  FILE* f = (FILE*)h;
+                  return feof(f);
+                }
+                
+       ##### -> int fileError(void* h) {
+                  FILE* f = (FILE*)h;
+                  return ferror(f);
+                }
+                
+       ##### -> void fputStr(void* h, char* str) {
+                    FILE* f = (FILE*)h;
+                    fputs(str, f);
+                }
+                
+       ##### -> int isNull(void* ptr) {
+                    return ptr==NULL;
+                }
+                
+       ##### -> void* idris_stdin() {
+                    return (void*)stdin;
+                }
+
+
+Top 10 Lines:
+
+     Line      Count
+
+        4          1
+
+Execution Summary:
+
+        8   Executable lines in this file
+        8   Lines executed
+   100.00   Percent of the file executed
+
+        1   Total number of line executions
+     0.12   Average executions per line
+
+
+*** File /home/kiwamu/src/idris-hayai/rts_orig/idris_gmp.c:
+                #include "idris_rts.h"
+                #include <gmp.h>
+                #include <stdlib.h>
+                #include <string.h>
+                
+       ##### -> VAL MKBIGI(int val) {
+                    return MKINT((i_int)val);
+                }
+                
+       ##### -> VAL MKBIGC(VM* vm, char* val) {
+                    mpz_t* bigint;
+                    
+                    VAL cl = allocate(vm, sizeof(ClosureType) + sizeof(void*) + 
+                                          sizeof(mpz_t), 0);
+                    bigint = (mpz_t*)(((char*)cl) + sizeof(ClosureType) + sizeof(void*));
+                    
+                    mpz_init(*bigint);
+                    mpz_set_str(*bigint, val, 10);
+                
+                    SETTY(cl, BIGINT);
+                    cl -> info.ptr = (void*)bigint;
+                
+                    return cl;
+                }
+                
+       ##### -> VAL MKBIGM(VM* vm, void* big) {
+                    mpz_t* bigint;
+                    VAL cl = allocate(vm, sizeof(ClosureType) + sizeof(void*) + 
+                                          sizeof(mpz_t), 0);
+                    bigint = (mpz_t*)(((char*)cl) + sizeof(ClosureType) + sizeof(void*));
+                
+                    mpz_init(*bigint);
+                    mpz_set(*bigint, *((mpz_t*)big));
+                
+                    SETTY(cl, BIGINT);
+                    cl -> info.ptr = (void*)bigint;
+                
+                    return cl;
+                }
+                
+         230 -> VAL MKBIGMc(VM* vm, void* big) {
+                    mpz_t* bigint;
+                    VAL cl = allocate(vm, sizeof(ClosureType) + sizeof(void*) + 
+                                          sizeof(mpz_t), 0);
+                    bigint = (mpz_t*)(((char*)cl) + sizeof(ClosureType) + sizeof(void*));
+                
+                    mpz_init_set(*bigint, *((mpz_t*)big));
+                
+                    SETTY(cl, BIGINT);
+                    cl -> info.ptr = (void*)bigint;
+                
+                    return cl;
+                }
+                
+     2467395 -> VAL GETBIG(VM * vm, VAL x) {
+                    if (ISINT(x)) {
+                        mpz_t* bigint;
+                        VAL cl = allocate(vm, sizeof(ClosureType) + sizeof(void*) + 
+                                              sizeof(mpz_t), 0);
+                        bigint = (mpz_t*)(((char*)cl) + sizeof(ClosureType) + sizeof(void*));
+                
+                        mpz_init(*bigint);
+                        mpz_set_si(*bigint, GETINT(x));
+                
+                        SETTY(cl, BIGINT);
+                        cl -> info.ptr = (void*)bigint;
+                
+                        return cl;
+                    } else {
+                        return x;
+                    }
+                }
+                
+     1233697 -> VAL bigAdd(VM* vm, VAL x, VAL y) {
+                    mpz_t* bigint;
+                    VAL cl = allocate(vm, sizeof(ClosureType) + sizeof(void*) + 
+                                          sizeof(mpz_t), 0);
+                    bigint = (mpz_t*)(((char*)cl) + sizeof(ClosureType) + sizeof(void*));
+                    mpz_add(*bigint, GETMPZ(x), GETMPZ(y));
+                    SETTY(cl, BIGINT);
+                    cl -> info.ptr = (void*)bigint;
+                    return cl;
+                }
+                
+       ##### -> VAL bigSub(VM* vm, VAL x, VAL y) {
+                    mpz_t* bigint;
+                    VAL cl = allocate(vm, sizeof(ClosureType) + sizeof(void*) + 
+                                          sizeof(mpz_t), 0);
+                    bigint = (mpz_t*)(((char*)cl) + sizeof(ClosureType) + sizeof(void*));
+                    mpz_sub(*bigint, GETMPZ(x), GETMPZ(y));
+                    SETTY(cl, BIGINT);
+                    cl -> info.ptr = (void*)bigint;
+                    return cl;
+                }
+                
+       ##### -> VAL bigMul(VM* vm, VAL x, VAL y) {
+                    mpz_t* bigint;
+                    VAL cl = allocate(vm, sizeof(ClosureType) + sizeof(void*) + 
+                                          sizeof(mpz_t), 0);
+                    bigint = (mpz_t*)(((char*)cl) + sizeof(ClosureType) + sizeof(void*));
+                    mpz_mul(*bigint, GETMPZ(x), GETMPZ(y));
+                    SETTY(cl, BIGINT);
+                    cl -> info.ptr = (void*)bigint;
+                    return cl;
+                }
+                
+       ##### -> VAL bigDiv(VM* vm, VAL x, VAL y) {
+                    mpz_t* bigint;
+                    VAL cl = allocate(vm, sizeof(ClosureType) + sizeof(void*) + 
+                                          sizeof(mpz_t), 0);
+                    bigint = (mpz_t*)(((char*)cl) + sizeof(ClosureType) + sizeof(void*));
+                    mpz_div(*bigint, GETMPZ(x), GETMPZ(y));
+                    SETTY(cl, BIGINT);
+                    cl -> info.ptr = (void*)bigint;
+                    return cl;
+                }
+                
+       ##### -> VAL bigMod(VM* vm, VAL x, VAL y) {
+                    mpz_t* bigint;
+                    VAL cl = allocate(vm, sizeof(ClosureType) + sizeof(void*) + 
+                                          sizeof(mpz_t), 0);
+                    bigint = (mpz_t*)(((char*)cl) + sizeof(ClosureType) + sizeof(void*));
+                    mpz_mod(*bigint, GETMPZ(x), GETMPZ(y));
+                    SETTY(cl, BIGINT);
+                    cl -> info.ptr = (void*)bigint;
+                    return cl;
+                }
+                
+     1234567 -> VAL idris_bigPlus(VM* vm, VAL x, VAL y) {
+                    if (ISINT(x) && ISINT(y)) {
+                        i_int vx = GETINT(x);
+                        i_int vy = GETINT(y);
+                        if ((vx <= 0 && vy >=0) || (vx >=0 && vy <=0)) {
+                            return ADD(x, y);
+                        }
+                        i_int res = vx + vy;
+                        if (res >= 1<<30 || res <= -(1 << 30)) {
+                            return bigAdd(vm, GETBIG(vm, x), GETBIG(vm, y));
+                        } else {
+                            return MKINT(res);
+                        }
+                    } else {
+                        return bigAdd(vm, GETBIG(vm, x), GETBIG(vm, y));
+                    }
+                }
+                
+     1234567 -> VAL idris_bigMinus(VM* vm, VAL x, VAL y) {
+                    if (ISINT(x) && ISINT(y)) {
+                        i_int vx = GETINT(x);
+                        i_int vy = GETINT(y);
+                        if ((vx <= 0 && vy <=0) || (vx >=0 && vy <=0)) {
+                            return INTOP(-, x, y);
+                        }
+                        i_int res = vx - vy;
+                        if (res >= 1<<30 || res <= -(1 << 30)) {
+                            return bigSub(vm, GETBIG(vm, x), GETBIG(vm, y));
+                        } else {
+                            return MKINT(res);
+                        }
+                    } else {
+                        return bigSub(vm, GETBIG(vm, x), GETBIG(vm, y));
+                    }
+                }
+                
+       ##### -> VAL idris_bigTimes(VM* vm, VAL x, VAL y) {
+                    if (ISINT(x) && ISINT(y)) {
+                        i_int vx = GETINT(x);
+                        i_int vy = GETINT(y);
+                	// we could work out likelihood of overflow by checking the number
+                	// of necessary bits. Here's a quick conservative hack instead.
+                	if ((vx < (1<<15) && vy < (1<16)) ||
+                	    (vx < (1<<16) && vy < (1<15)) ||
+                	    (vx < (1<<20) && vy < (1<11)) ||
+                	    (vx < (1<<11) && vy < (1<20)) ||
+                	    (vx < (1<<23) && vy < (1<<8)) ||
+                	    (vx < (1<<8) && vy < (1<<23))) { // ultra-conservative!
+                	    return INTOP(*,x,y);
+                        } else {
+                            return bigMul(vm, GETBIG(vm, x), GETBIG(vm, y));
+                        }
+                    } else {
+                        return bigMul(vm, GETBIG(vm, x), GETBIG(vm, y));
+                    }
+                }
+                
+       ##### -> VAL idris_bigDivide(VM* vm, VAL x, VAL y) {
+                    if (ISINT(x) && ISINT(y)) {
+                        return INTOP(/, x, y);
+                    } else {
+                        return bigDiv(vm, GETBIG(vm, x), GETBIG(vm, y));
+                    }
+                }
+                
+       ##### -> VAL idris_bigMod(VM* vm, VAL x, VAL y) {
+                    if (ISINT(x) && ISINT(y)) {
+                        return INTOP(%, x, y);
+                    } else {
+                        return bigMod(vm, GETBIG(vm, x), GETBIG(vm, y));
+                    }
+                }
+                
+       ##### -> int bigEqConst(VAL x, int c) {
+                    if (ISINT(x)) { return (GETINT(x) == c); }
+                    else { 
+                        int rv = mpz_cmp_si(GETMPZ(x), c); 
+                        return (rv == 0);
+                    }
+                }
+                
+       ##### -> VAL bigEq(VM* vm, VAL x, VAL y) {
+                    return MKINT((i_int)(mpz_cmp(GETMPZ(x), GETMPZ(y)) == 0));
+                }
+                
+       ##### -> VAL bigLt(VM* vm, VAL x, VAL y) {
+                    return MKINT((i_int)(mpz_cmp(GETMPZ(x), GETMPZ(y)) < 0));
+                }
+                
+       ##### -> VAL bigGt(VM* vm, VAL x, VAL y) {
+                    return MKINT((i_int)(mpz_cmp(GETMPZ(x), GETMPZ(y)) > 0));
+                }
+                
+       ##### -> VAL bigLe(VM* vm, VAL x, VAL y) {
+                    return MKINT((i_int)(mpz_cmp(GETMPZ(x), GETMPZ(y)) <= 0));
+                }
+                
+       ##### -> VAL bigGe(VM* vm, VAL x, VAL y) {
+                    return MKINT((i_int)(mpz_cmp(GETMPZ(x), GETMPZ(y)) >= 0));
+                }
+                
+     2469136 -> VAL idris_bigEq(VM* vm, VAL x, VAL y) {
+                    if (ISINT(x) && ISINT(y)) {
+                        return MKINT((i_int)(GETINT(x) == GETINT(y)));
+                    } else {
+                        return bigEq(vm, x, y);
+                    }
+                }
+                
+     1234567 -> VAL idris_bigLt(VM* vm, VAL x, VAL y) {
+                    if (ISINT(x) && ISINT(y)) {
+                        return MKINT((i_int)(GETINT(x) < GETINT(y)));
+                    } else {
+                        return bigLt(vm, x, y);
+                    }
+                }
+                
+       ##### -> VAL idris_bigLe(VM* vm, VAL x, VAL y) {
+                    if (ISINT(x) && ISINT(y)) {
+                        return MKINT((i_int)(GETINT(x) <= GETINT(y)));
+                    } else {
+                        return bigLe(vm, x, y);
+                    }
+                }
+                
+       ##### -> VAL idris_bigGt(VM* vm, VAL x, VAL y) {
+                    if (ISINT(x) && ISINT(y)) {
+                        return MKINT((i_int)(GETINT(x) > GETINT(y)));
+                    } else {
+                        return bigGt(vm, x, y);
+                    }
+                }
+                
+       ##### -> VAL idris_bigGe(VM* vm, VAL x, VAL y) {
+                    if (ISINT(x) && ISINT(y)) {
+                        return MKINT((i_int)(GETINT(x) >= GETINT(y)));
+                    } else {
+                        return bigGe(vm, x, y);
+                    }
+                }
+                
+                
+       ##### -> VAL idris_castIntBig(VM* vm, VAL i) {
+                    return i;
+                }
+                
+       ##### -> VAL idris_castBigInt(VM* vm, VAL i) {
+                    if (ISINT(i)) {
+                        return i;
+                    } else {
+                        return MKINT((i_int)(mpz_get_ui(GETMPZ(i))));
+                    }
+                }
+                
+       ##### -> VAL idris_castStrBig(VM* vm, VAL i) {
+                    return MKBIGC(vm, GETSTR(i));
+                }
+                
+           1 -> VAL idris_castBigStr(VM* vm, VAL i) {
+                    char* str = mpz_get_str(NULL, 10, GETMPZ(GETBIG(vm, i)));
+                    return MKSTR(vm, str);
+                }
+                
+
+
+Top 10 Lines:
+
+     Line      Count
+
+      230    2469136
+       55    2467395
+      129    1234567
+      147    1234567
+      238    1234567
+       74    1233697
+       41        230
+      287          1
+
+Execution Summary:
+
+       30   Executable lines in this file
+       30   Lines executed
+   100.00   Percent of the file executed
+
+  9874160   Total number of line executions
+329138.67   Average executions per line
+
+
+*** File /home/kiwamu/src/idris-hayai/sum-idr-main.c:
+                #include <math.h>
+                #include <idris_rts.h>
+                #include <idris_stdfgn.h>
+                #include <gmp.h>
+                #include <assert.h>
+                void _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33_compare(VM*, VAL*);
+                void _idris_FalseElim(VM*, VAL*);
+                void _idris_Builtins_46_boolElim(VM*, VAL*);
+                void _idris_Builtins_46_intToBool(VM*, VAL*);
+                void _idris_io_95_bind(VM*, VAL*);
+                void _idris_lazy(VM*, VAL*);
+                void _idris_Main_46_main(VM*, VAL*);
+                void _idris_mkForeign(VM*, VAL*);
+                void _idris_mkLazyForeign(VM*, VAL*);
+                void _idris_prim_95__95_addBigInt(VM*, VAL*);
+                void _idris_prim_95__95_bigIntToStr(VM*, VAL*);
+                void _idris_prim_95__95_concat(VM*, VAL*);
+                void _idris_prim_95__95_eqBigInt(VM*, VAL*);
+                void _idris_prim_95__95_ltBigInt(VM*, VAL*);
+                void _idris_prim_95__95_subBigInt(VM*, VAL*);
+                void _idris_run_95__95_IO(VM*, VAL*);
+                void _idris_Main_46_sumAcc(VM*, VAL*);
+                void _idris_unsafePerformIO(VM*, VAL*);
+                void _idris_Builtins_46__124__124_(VM*, VAL*);
+                void _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare0_125_(VM*, VAL*);
+                void _idris__123_APPLY0_125_(VM*, VAL*);
+                void _idris__123_EVAL0_125_(VM*, VAL*);
+                void _idris__123_runMain0_125_(VM*, VAL*);
+                void _idris_Main_46__123_sumAcc0_125_(VM*, VAL*);
+                void _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare1_125_(VM*, VAL*);
+                void _idris_Main_46__123_sumAcc1_125_(VM*, VAL*);
+                void _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare2_125_(VM*, VAL*);
+                void _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare3_125_(VM*, VAL*);
+                void _idris__123__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33__60_109_125_(VM*, VAL*);
+     1234568 -> void _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33_compare(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(4);
+                    ADDTOP(4);
+                    LOC(2) = NULL;
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(3) = RVAL;
+                    RESERVE(1);
+                    TOP(0) = LOC(1);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(4) = RVAL;
+                    LOC(3) = idris_bigEq(vm, LOC(3), LOC(4));
+                    RESERVE(1);
+                    TOP(0) = LOC(3);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris_Builtins_46_intToBool);
+                    LOC(3) = RVAL;
+                    allocCon(REG1, vm, 65593,0, 0);
+                    
+                    LOC(4) = REG1;
+                    allocCon(REG1, vm, 65596,2, 0);
+                    SETARG(REG1, 0, LOC(0)); SETARG(REG1, 1, LOC(1)); 
+                    LOC(5) = REG1;
+                    RESERVE(4);
+                    TOP(0) = LOC(2);
+                    TOP(1) = LOC(3);
+                    TOP(2) = LOC(4);
+                    TOP(3) = LOC(5);
+                    SLIDE(vm, 4);
+                    TOPBASE(4);
+                    TAILCALL(_idris_Builtins_46_boolElim);
+                }
+                
+       ##### -> void _idris_FalseElim(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(1);
+                    ADDTOP(1);
+                    fprintf(stderr, "Impossible declaration FalseElim"); assert(0); exit(-1);}
+                
+     3703703 -> void _idris_Builtins_46_boolElim(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(1);
+                    ADDTOP(1);
+                    RESERVE(1);
+                    TOP(0) = LOC(1);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(4) = RVAL;
+                if (CTAG(LOC(4)) == 0) {
+                            PROJECT(vm, LOC(4), 5, 0);
+                        RVAL = LOC(3);
+                        TOPBASE(0);
+                        REBASE;
+                    }
+                else {
+                            PROJECT(vm, LOC(4), 5, 0);
+                        RVAL = LOC(2);
+                        TOPBASE(0);
+                        REBASE;
+                    }
+                }
+                
+     3703703 -> void _idris_Builtins_46_intToBool(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(1);
+                    ADDTOP(1);
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(1) = RVAL;
+                    if (GETINT(LOC(1)) == 0) {
+                        allocCon(REG1, vm, 0,0, 0);
+                        
+                        RVAL = REG1;
+                        TOPBASE(0);
+                        REBASE;
+                    } else
+                    {
+                        allocCon(REG1, vm, 1,0, 0);
+                        
+                        RVAL = REG1;
+                        TOPBASE(0);
+                        REBASE;
+                    }
+                }
+                
+       ##### -> void _idris_io_95_bind(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(1);
+                    ADDTOP(1);
+                    RESERVE(1);
+                    TOP(0) = LOC(2);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(4) = RVAL;
+                    LOC(2) = LOC(4);
+                    LOC(4) = GETARG(LOC(4), 0);
+                    RESERVE(2);
+                    TOP(0) = LOC(3);
+                    TOP(1) = LOC(4);
+                    SLIDE(vm, 2);
+                    TOPBASE(2);
+                    TAILCALL(_idris__123_APPLY0_125_);
+                }
+                
+       ##### -> void _idris_lazy(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(1);
+                    ADDTOP(1);
+                    RVAL = LOC(1);
+                    TOPBASE(0);
+                    REBASE;
+                }
+                
+           1 -> void _idris_Main_46_main(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(2);
+                    ADDTOP(2);
+                    LOC(0) = MKINT(1234567);
+                    LOC(1) = MKINT(0);
+                    RESERVE(2);
+                    TOP(0) = LOC(0);
+                    TOP(1) = LOC(1);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(2);
+                    CALL(_idris_Main_46_sumAcc);
+                    LOC(0) = RVAL;
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(0) = RVAL;
+                    LOC(0) = idris_castBigStr(vm, LOC(0));
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(0) = RVAL;
+                    LOC(1) = MKSTR(vm, "\n");
+                    RESERVE(1);
+                    TOP(0) = LOC(1);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(1) = RVAL;
+                    LOC(0) = idris_concat(vm, LOC(0), LOC(1));
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(0) = RVAL;
+                    putStr(GETSTR(LOC(0)));
+                    TOPBASE(0);
+                    REBASE;
+                }
+                
+       ##### -> void _idris_mkForeign(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(1);
+                    ADDTOP(1);
+                    fprintf(stderr, "Impossible declaration mkForeign"); assert(0); exit(-1);}
+                
+       ##### -> void _idris_mkLazyForeign(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(1);
+                    ADDTOP(1);
+                    fprintf(stderr, "Impossible declaration mkLazyForeign"); assert(0); exit(-1);}
+                
+       ##### -> void _idris_prim_95__95_addBigInt(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(2);
+                    ADDTOP(2);
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(2) = RVAL;
+                    RESERVE(1);
+                    TOP(0) = LOC(1);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(3) = RVAL;
+                    RVAL = idris_bigPlus(vm, LOC(2), LOC(3));
+                    TOPBASE(0);
+                    REBASE;
+                }
+                
+       ##### -> void _idris_prim_95__95_bigIntToStr(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(1);
+                    ADDTOP(1);
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(1) = RVAL;
+                    RVAL = idris_castBigStr(vm, LOC(1));
+                    TOPBASE(0);
+                    REBASE;
+                }
+                
+       ##### -> void _idris_prim_95__95_concat(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(2);
+                    ADDTOP(2);
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(2) = RVAL;
+                    RESERVE(1);
+                    TOP(0) = LOC(1);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(3) = RVAL;
+                    RVAL = idris_concat(vm, LOC(2), LOC(3));
+                    TOPBASE(0);
+                    REBASE;
+                }
+                
+       ##### -> void _idris_prim_95__95_eqBigInt(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(2);
+                    ADDTOP(2);
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(2) = RVAL;
+                    RESERVE(1);
+                    TOP(0) = LOC(1);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(3) = RVAL;
+                    RVAL = idris_bigEq(vm, LOC(2), LOC(3));
+                    TOPBASE(0);
+                    REBASE;
+                }
+                
+       ##### -> void _idris_prim_95__95_ltBigInt(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(2);
+                    ADDTOP(2);
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(2) = RVAL;
+                    RESERVE(1);
+                    TOP(0) = LOC(1);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(3) = RVAL;
+                    RVAL = idris_bigLt(vm, LOC(2), LOC(3));
+                    TOPBASE(0);
+                    REBASE;
+                }
+                
+       ##### -> void _idris_prim_95__95_subBigInt(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(2);
+                    ADDTOP(2);
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(2) = RVAL;
+                    RESERVE(1);
+                    TOP(0) = LOC(1);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(3) = RVAL;
+                    RVAL = idris_bigMinus(vm, LOC(2), LOC(3));
+                    TOPBASE(0);
+                    REBASE;
+                }
+                
+           1 -> void _idris_run_95__95_IO(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(1);
+                    ADDTOP(1);
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(1) = RVAL;
+                    RVAL = LOC(1);
+                    TOPBASE(0);
+                    REBASE;
+                }
+                
+     1234568 -> void _idris_Main_46_sumAcc(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(4);
+                    ADDTOP(4);
+                    LOC(2) = NULL;
+                    LOC(3) = MKINT(0);
+                    RESERVE(2);
+                    TOP(0) = LOC(0);
+                    TOP(1) = LOC(3);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(2);
+                    CALL(_idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33_compare);
+                    LOC(3) = RVAL;
+                    LOC(4) = NULL;
+                    LOC(5) = NULL;
+                    RESERVE(3);
+                    TOP(0) = LOC(3);
+                    TOP(1) = LOC(4);
+                    TOP(2) = LOC(5);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(3);
+                    CALL(_idris__123__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33__60_109_125_);
+                    LOC(3) = RVAL;
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(4) = RVAL;
+                    LOC(5) = MKINT(0);
+                    RESERVE(1);
+                    TOP(0) = LOC(5);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(5) = RVAL;
+                    LOC(4) = idris_bigEq(vm, LOC(4), LOC(5));
+                    RESERVE(1);
+                    TOP(0) = LOC(4);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris_Builtins_46_intToBool);
+                    LOC(4) = RVAL;
+                    RESERVE(2);
+                    TOP(0) = LOC(3);
+                    TOP(1) = LOC(4);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(2);
+                    CALL(_idris_Builtins_46__124__124_);
+                    LOC(3) = RVAL;
+                    allocCon(REG1, vm, 65597,1, 0);
+                    SETARG(REG1, 0, LOC(1)); 
+                    LOC(4) = REG1;
+                    allocCon(REG1, vm, 65598,2, 0);
+                    SETARG(REG1, 0, LOC(0)); SETARG(REG1, 1, LOC(1)); 
+                    LOC(5) = REG1;
+                    RESERVE(4);
+                    TOP(0) = LOC(2);
+                    TOP(1) = LOC(3);
+                    TOP(2) = LOC(4);
+                    TOP(3) = LOC(5);
+                    SLIDE(vm, 4);
+                    TOPBASE(4);
+                    TAILCALL(_idris_Builtins_46_boolElim);
+                }
+                
+       ##### -> void _idris_unsafePerformIO(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(1);
+                    ADDTOP(1);
+                    fprintf(stderr, "Impossible declaration unsafePerformIO"); assert(0); exit(-1);}
+                
+     1234568 -> void _idris_Builtins_46__124__124_(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(1);
+                    ADDTOP(1);
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(2) = RVAL;
+                if (CTAG(LOC(2)) == 0) {
+                            PROJECT(vm, LOC(2), 3, 0);
+                        RVAL = LOC(1);
+                        TOPBASE(0);
+                        REBASE;
+                    }
+                else {
+                            PROJECT(vm, LOC(2), 3, 0);
+                        allocCon(REG1, vm, 1,0, 0);
+                        
+                        RVAL = REG1;
+                        TOPBASE(0);
+                        REBASE;
+                    }
+                }
+                
+           1 -> void _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare0_125_(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(1);
+                    ADDTOP(1);
+                    allocCon(REG1, vm, 1,0, 0);
+                    
+                    RVAL = REG1;
+                    TOPBASE(0);
+                    REBASE;
+                }
+                
+       ##### -> void _idris__123_APPLY0_125_(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(2);
+                    ADDTOP(2);
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(2) = RVAL;
+                    switch(TAG(LOC(2))) {
+                    case 65599:
+                        PROJECT(vm, LOC(2), 3, 1);
+                        RESERVE(2);
+                        TOP(0) = LOC(3);
+                        TOP(1) = LOC(1);
+                        SLIDE(vm, 2);
+                        TOPBASE(2);
+                        TAILCALL(_idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare3_125_);
+                        break;
+                    case 65600:
+                        PROJECT(vm, LOC(2), 3, 0);
+                        RESERVE(1);
+                        TOP(0) = LOC(1);
+                        SLIDE(vm, 1);
+                        TOPBASE(1);
+                        TAILCALL(_idris_Main_46__123_sumAcc0_125_);
+                        break;
+                    case 65601:
+                        PROJECT(vm, LOC(2), 3, 1);
+                        RESERVE(2);
+                        TOP(0) = LOC(3);
+                        TOP(1) = LOC(1);
+                        SLIDE(vm, 2);
+                        TOPBASE(2);
+                        TAILCALL(_idris_Main_46__123_sumAcc1_125_);
+                        break;
+                    case 65602:
+                        PROJECT(vm, LOC(2), 3, 0);
+                        allocCon(REG1, vm, 65599,1, 0);
+                        SETARG(REG1, 0, LOC(1)); 
+                        RVAL = REG1;
+                        TOPBASE(0);
+                        REBASE;
+                        break;
+                    case 65603:
+                        PROJECT(vm, LOC(2), 3, 0);
+                        allocCon(REG1, vm, 65601,1, 0);
+                        SETARG(REG1, 0, LOC(1)); 
+                        RVAL = REG1;
+                        TOPBASE(0);
+                        REBASE;
+                        break;
+                    }
+                }
+                
+    22222221 -> void _idris__123_EVAL0_125_(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(3);
+                    ADDTOP(3);
+                    switch(TAG(LOC(0))) {
+                    case 65593:
+                        PROJECT(vm, LOC(0), 1, 0);
+                        STOREOLD;
+                        BASETOP(0);
+                        CALL(_idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare0_125_);
+                        LOC(1) = RVAL;
+                        RESERVE(1);
+                        TOP(0) = LOC(1);
+                        SLIDE(vm, 1);
+                        TOPBASE(1);
+                        TAILCALL(_idris__123_EVAL0_125_);
+                        break;
+                    case 65594:
+                        PROJECT(vm, LOC(0), 1, 0);
+                        STOREOLD;
+                        BASETOP(0);
+                        CALL(_idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare1_125_);
+                        LOC(1) = RVAL;
+                        RESERVE(1);
+                        TOP(0) = LOC(1);
+                        SLIDE(vm, 1);
+                        TOPBASE(1);
+                        TAILCALL(_idris__123_EVAL0_125_);
+                        break;
+                    case 65595:
+                        PROJECT(vm, LOC(0), 1, 0);
+                        STOREOLD;
+                        BASETOP(0);
+                        CALL(_idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare2_125_);
+                        LOC(1) = RVAL;
+                        RESERVE(1);
+                        TOP(0) = LOC(1);
+                        SLIDE(vm, 1);
+                        TOPBASE(1);
+                        TAILCALL(_idris__123_EVAL0_125_);
+                        break;
+                    case 65596:
+                        PROJECT(vm, LOC(0), 1, 2);
+                        RESERVE(2);
+                        TOP(0) = LOC(1);
+                        TOP(1) = LOC(2);
+                        STOREOLD;
+                        BASETOP(0);
+                        ADDTOP(2);
+                        CALL(_idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare3_125_);
+                        LOC(3) = RVAL;
+                        RESERVE(1);
+                        TOP(0) = LOC(3);
+                        SLIDE(vm, 1);
+                        TOPBASE(1);
+                        TAILCALL(_idris__123_EVAL0_125_);
+                        break;
+                    case 65597:
+                        PROJECT(vm, LOC(0), 1, 1);
+                        RESERVE(1);
+                        TOP(0) = LOC(1);
+                        STOREOLD;
+                        BASETOP(0);
+                        ADDTOP(1);
+                        CALL(_idris_Main_46__123_sumAcc0_125_);
+                        LOC(2) = RVAL;
+                        RESERVE(1);
+                        TOP(0) = LOC(2);
+                        SLIDE(vm, 1);
+                        TOPBASE(1);
+                        TAILCALL(_idris__123_EVAL0_125_);
+                        break;
+                    case 65598:
+                        PROJECT(vm, LOC(0), 1, 2);
+                        RESERVE(2);
+                        TOP(0) = LOC(1);
+                        TOP(1) = LOC(2);
+                        STOREOLD;
+                        BASETOP(0);
+                        ADDTOP(2);
+                        CALL(_idris_Main_46__123_sumAcc1_125_);
+                        LOC(3) = RVAL;
+                        RESERVE(1);
+                        TOP(0) = LOC(3);
+                        SLIDE(vm, 1);
+                        TOPBASE(1);
+                        TAILCALL(_idris__123_EVAL0_125_);
+                        break;
+                    default:
+                        RVAL = LOC(0);
+                        TOPBASE(0);
+                        REBASE;
+                        break;
+                    }
+                }
+                
+       ##### -> void _idris__123_runMain0_125_(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(1);
+                    ADDTOP(1);
+                    STOREOLD;
+                    BASETOP(0);
+                    CALL(_idris_Main_46_main);
+                    LOC(0) = RVAL;
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris_run_95__95_IO);
+                    LOC(0) = RVAL;
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    SLIDE(vm, 1);
+                    TOPBASE(1);
+                    TAILCALL(_idris__123_EVAL0_125_);
+                }
+                
+           1 -> void _idris_Main_46__123_sumAcc0_125_(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(1);
+                    ADDTOP(1);
+                    RVAL = LOC(0);
+                    TOPBASE(0);
+                    REBASE;
+                }
+                
+       ##### -> void _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare1_125_(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(1);
+                    ADDTOP(1);
+                    allocCon(REG1, vm, 0,0, 0);
+                    
+                    RVAL = REG1;
+                    TOPBASE(0);
+                    REBASE;
+                }
+                
+     1234567 -> void _idris_Main_46__123_sumAcc1_125_(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(3);
+                    ADDTOP(3);
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(2) = RVAL;
+                    LOC(3) = MKINT(1);
+                    RESERVE(1);
+                    TOP(0) = LOC(3);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(3) = RVAL;
+                    LOC(2) = idris_bigMinus(vm, LOC(2), LOC(3));
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(3) = RVAL;
+                    RESERVE(1);
+                    TOP(0) = LOC(1);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(4) = RVAL;
+                    LOC(3) = idris_bigPlus(vm, LOC(3), LOC(4));
+                    RESERVE(2);
+                    TOP(0) = LOC(2);
+                    TOP(1) = LOC(3);
+                    SLIDE(vm, 2);
+                    TOPBASE(2);
+                    TAILCALL(_idris_Main_46_sumAcc);
+                }
+                
+     1234567 -> void _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare2_125_(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(1);
+                    ADDTOP(1);
+                    allocCon(REG1, vm, 2,0, 0);
+                    
+                    RVAL = REG1;
+                    TOPBASE(0);
+                    REBASE;
+                }
+                
+     1234567 -> void _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare3_125_(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(4);
+                    ADDTOP(4);
+                    LOC(2) = NULL;
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(3) = RVAL;
+                    RESERVE(1);
+                    TOP(0) = LOC(1);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(4) = RVAL;
+                    LOC(3) = idris_bigLt(vm, LOC(3), LOC(4));
+                    RESERVE(1);
+                    TOP(0) = LOC(3);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris_Builtins_46_intToBool);
+                    LOC(3) = RVAL;
+                    allocCon(REG1, vm, 65594,0, 0);
+                    
+                    LOC(4) = REG1;
+                    allocCon(REG1, vm, 65595,0, 0);
+                    
+                    LOC(5) = REG1;
+                    RESERVE(4);
+                    TOP(0) = LOC(2);
+                    TOP(1) = LOC(3);
+                    TOP(2) = LOC(4);
+                    TOP(3) = LOC(5);
+                    SLIDE(vm, 4);
+                    TOPBASE(4);
+                    TAILCALL(_idris_Builtins_46_boolElim);
+                }
+                
+     1234568 -> void _idris__123__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33__60_109_125_(VM* vm, VAL* oldbase) {
+                    INITFRAME;
+                    RESERVE(1);
+                    ADDTOP(1);
+                    RESERVE(1);
+                    TOP(0) = LOC(0);
+                    STOREOLD;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    CALL(_idris__123_EVAL0_125_);
+                    LOC(3) = RVAL;
+                if (CTAG(LOC(3)) == 0) {
+                            PROJECT(vm, LOC(3), 4, 0);
+                        allocCon(REG1, vm, 1,0, 0);
+                        
+                        RVAL = REG1;
+                        TOPBASE(0);
+                        REBASE;
+                    }
+                else {
+                            allocCon(REG1, vm, 0,0, 0);
+                        
+                        RVAL = REG1;
+                        TOPBASE(0);
+                        REBASE;
+                    }
+                }
+                
+       ##### -> int main(int argc, char* argv[]) {
+                    VM* vm = init_vm(4096000, 4096000, 1, argc, argv); // 1024000);
+                    _idris__123_runMain0_125_(vm, NULL);
+                    //_idris_main(vm, NULL);
+                #ifdef IDRIS_TRACE
+                    idris_gcInfo(vm, 1);
+                #endif
+                    terminate(vm);
+                }
+
+
+Top 10 Lines:
+
+     Line      Count
+
+      548   22222221
+       84    3703703
+      109    3703703
+       35    1234568
+      375    1234568
+      453    1234568
+      783    1234568
+      686    1234567
+      729    1234567
+      740    1234567
+
+Execution Summary:
+
+       30   Executable lines in this file
+       30   Lines executed
+   100.00   Percent of the file executed
+
+ 38271604   Total number of line executions
+1275720.13   Average executions per line
+
+
+*** File /home/kiwamu/src/idris-hayai/rts_orig/idris_rts.c:
+                #include <stdlib.h>
+                #include <stdio.h>
+                #include <string.h>
+                #include <unistd.h>
+                #include <stdarg.h>
+                #include <assert.h>
+                #include <pthread.h>
+                
+                #include "idris_rts.h"
+                #include "idris_gc.h"
+                
+                VM* init_vm(int stack_size, size_t heap_size, 
+                            int max_threads, // not implemented yet
+       ##### ->             int argc, char* argv[]) {
+                    VAL* valstack = malloc(stack_size*sizeof(VAL));
+                    int* intstack = malloc(stack_size*sizeof(int));
+                    double* floatstack = malloc(stack_size*sizeof(double));
+                
+                    VM* vm = malloc(sizeof(VM));
+                    vm->valstack = valstack;
+                    vm->valstack_top = valstack;
+                    vm->valstack_base = valstack;
+                    vm->intstack = intstack;
+                    vm->intstack_ptr = intstack;
+                    vm->floatstack = floatstack;
+                    vm->floatstack_ptr = floatstack;
+                    vm->stack_max = valstack + stack_size;
+                    vm->heap = malloc(heap_size);
+                    vm->oldheap = NULL;
+                    vm->heap_next = vm->heap;
+                    vm->heap_end = vm->heap + heap_size;
+                    vm->heap_size = heap_size;
+                    vm->collections = 0;
+                    vm->allocations = 0;
+                    vm->heap_growth = heap_size;
+                    vm->ret = NULL;
+                    vm->reg1 = NULL;
+                
+                    vm->inbox = malloc(1024*sizeof(VAL));
+                    memset(vm->inbox, 0, 1024*sizeof(VAL));
+                    vm->inbox_end = vm->inbox + 1024;
+                    vm->inbox_ptr = vm->inbox;
+                    vm->inbox_write = vm->inbox;
+                
+                    pthread_mutex_init(&(vm->inbox_lock), NULL);
+                    pthread_mutex_init(&(vm->inbox_block), NULL);
+                    pthread_mutex_init(&(vm->alloc_lock), NULL);
+                    pthread_cond_init(&(vm->inbox_waiting), NULL);
+                
+                    vm->max_threads = max_threads;
+                    vm->processes = 0;
+                
+                    int i;
+                    // Assumption: there's enough space for this in the initial heap.
+                    vm->argv = malloc(argc*sizeof(VAL));
+                    vm->argc = argc;
+                
+                    for(i = 0; i < argc; ++i) {
+                        vm->argv[i] = MKSTR(vm, argv[i]);
+                    }
+                
+                    return vm;
+                }
+                
+       ##### -> void terminate(VM* vm) {
+                    free(vm->inbox);
+                    free(vm->valstack);
+                    free(vm->intstack);
+                    free(vm->floatstack);
+                    free(vm->heap);
+                    free(vm->argv);
+                    if (vm->oldheap != NULL) { free(vm->oldheap); }
+                    pthread_mutex_destroy(&(vm -> inbox_lock));
+                    pthread_mutex_destroy(&(vm -> inbox_block));
+                    pthread_cond_destroy(&(vm -> inbox_waiting));
+                    free(vm);
+                }
+                
+    16048449 -> void* allocate(VM* vm, size_t size, int outerlock) {
+                //    return malloc(size);
+                    int lock = vm->processes > 0 && !outerlock;
+                
+                    if (lock) { // not message passing
+                       pthread_mutex_lock(&vm->alloc_lock); 
+                    }
+                
+                    if ((size & 7)!=0) {
+                	size = 8 + ((size >> 3) << 3);
+                    }
+                    if (vm -> heap_next + size < vm -> heap_end) {
+                        vm->allocations += size + sizeof(size_t);
+                        void* ptr = (void*)(vm->heap_next + sizeof(size_t));
+                        *((size_t*)(vm->heap_next)) = size + sizeof(size_t);
+                        vm -> heap_next += size + sizeof(size_t);
+                        memset(ptr, 0, size);
+                        if (lock) { // not message passing
+                           pthread_mutex_unlock(&vm->alloc_lock); 
+                        }
+                        return ptr;
+                    } else {
+                        idris_gc(vm);
+                        if (lock) { // not message passing
+                           pthread_mutex_unlock(&vm->alloc_lock); 
+                        }
+                        return allocate(vm, size, 0);
+                    }
+                
+                }
+                
+                /* Now a macro
+                void* allocCon(VM* vm, int arity, int outer) {
+                    Closure* cl = allocate(vm, sizeof(Closure) + sizeof(VAL)*arity,
+                                               outer);
+                    SETTY(cl, CON);
+                
+                    cl -> info.c.arity = arity;
+                //    cl -> info.c.tag = 42424242;
+                //    printf("%p\n", cl);
+                    return (void*)cl;
+                }
+                */
+                
+       ##### -> VAL MKFLOAT(VM* vm, double val) {
+                    Closure* cl = allocate(vm, sizeof(Closure), 0);
+                    SETTY(cl, FLOAT);
+                    cl -> info.f = val;
+                    return cl;
+                }
+                
+           3 -> VAL MKSTR(VM* vm, char* str) {
+                    Closure* cl = allocate(vm, sizeof(Closure) + // Type) + sizeof(char*) +
+                                               sizeof(char)*strlen(str)+1, 0);
+                    SETTY(cl, STRING);
+                    cl -> info.str = (char*)cl + sizeof(Closure);
+                
+                    strcpy(cl -> info.str, str);
+                    return cl;
+                }
+                
+       ##### -> VAL MKPTR(VM* vm, void* ptr) {
+                    Closure* cl = allocate(vm, sizeof(Closure), 0);
+                    SETTY(cl, PTR);
+                    cl -> info.ptr = ptr;
+                    return cl;
+                }
+                
+       ##### -> VAL MKFLOATc(VM* vm, double val) {
+                    Closure* cl = allocate(vm, sizeof(Closure), 1);
+                    SETTY(cl, FLOAT);
+                    cl -> info.f = val;
+                    return cl;
+                }
+                
+         115 -> VAL MKSTRc(VM* vm, char* str) {
+                    Closure* cl = allocate(vm, sizeof(Closure) + // Type) + sizeof(char*) +
+                                               sizeof(char)*strlen(str)+1, 1);
+                    SETTY(cl, STRING);
+                    cl -> info.str = (char*)cl + sizeof(Closure);
+                
+                    strcpy(cl -> info.str, str);
+                    return cl;
+                }
+                
+       ##### -> VAL MKPTRc(VM* vm, void* ptr) {
+                    Closure* cl = allocate(vm, sizeof(Closure), 1);
+                    SETTY(cl, PTR);
+                    cl -> info.ptr = ptr;
+                    return cl;
+                }
+                
+     8641974 -> void PROJECT(VM* vm, VAL r, int loc, int arity) {
+                    int i;
+                    for(i = 0; i < arity; ++i) {
+                        LOC(i+loc) = r->info.c.args[i];
+                    }
+                }
+                
+     8641974 -> void SLIDE(VM* vm, int args) {
+                    int i;
+                    for(i = 0; i < args; ++i) {
+                        LOC(i) = TOP(i);
+                    }
+                }
+                
+       ##### -> void dumpStack(VM* vm) {
+                    int i = 0;
+                    VAL* root;
+                
+                    for (root = vm->valstack; root < vm->valstack_top; ++root, ++i) {
+                        printf("%d: ", i);
+                        dumpVal(*root);
+                        if (*root >= (VAL)(vm->heap) && *root < (VAL)(vm->heap_end)) { printf("OK"); }
+                        printf("\n");
+                    }
+                    printf("RET: ");
+                    dumpVal(vm->ret);
+                    printf("\n");
+                }
+                
+       ##### -> void dumpVal(VAL v) {
+                    if (v==NULL) return;
+                    int i;
+                    if (ISINT(v)) { 
+                        printf("%d ", (int)(GETINT(v)));
+                        return;
+                    }
+                    switch(GETTY(v)) {
+                    case CON:
+                        printf("%d[", TAG(v));
+                        for(i = 0; i < ARITY(v); ++i) {
+                            dumpVal(v->info.c.args[i]);
+                        }
+                        printf("] ");
+                        break;
+                    case STRING:
+                        printf("STR[%s]", v->info.str);
+                        break;
+                    case FWD:
+                        printf("FWD ");
+                        dumpVal((VAL)(v->info.ptr));
+                        break;
+                    default:
+                        printf("val");
+                    }
+                
+                }
+                
+       ##### -> VAL idris_castIntStr(VM* vm, VAL i) {
+                    Closure* cl = allocate(vm, sizeof(Closure) + sizeof(char)*16, 0);
+                    SETTY(cl, STRING);
+                    cl -> info.str = (char*)cl + sizeof(Closure);
+                    sprintf(cl -> info.str, "%d", (int)(GETINT(i)));
+                    return cl;
+                }
+                
+       ##### -> VAL idris_castStrInt(VM* vm, VAL i) {
+                    char *end;
+                    i_int v = strtol(GETSTR(i), &end, 10);
+                    if (*end == '\0' || *end == '\n' || *end == '\r') 
+                        return MKINT(v);
+                    else 
+                        return MKINT(0); 
+                }
+                
+       ##### -> VAL idris_castFloatStr(VM* vm, VAL i) {
+                    Closure* cl = allocate(vm, sizeof(Closure) + sizeof(char)*32, 0);
+                    SETTY(cl, STRING);
+                    cl -> info.str = (char*)cl + sizeof(Closure);
+                    sprintf(cl -> info.str, "%g", GETFLOAT(i));
+                    return cl;
+                }
+                
+       ##### -> VAL idris_castStrFloat(VM* vm, VAL i) {
+                    return MKFLOAT(vm, strtod(GETSTR(i), NULL));
+                }
+                
+           1 -> VAL idris_concat(VM* vm, VAL l, VAL r) {
+                    char *rs = GETSTR(r);
+                    char *ls = GETSTR(l);
+                    // dumpVal(l);
+                    // printf("\n");
+                    Closure* cl = allocate(vm, sizeof(Closure) + strlen(ls) + strlen(rs) + 1,
+                                               0);
+                    SETTY(cl, STRING);
+                    cl -> info.str = (char*)cl + sizeof(Closure);
+                    strcpy(cl -> info.str, ls);
+                    strcat(cl -> info.str, rs); 
+                    return cl;
+                }
+                
+       ##### -> VAL idris_strlt(VM* vm, VAL l, VAL r) {
+                    char *ls = GETSTR(l);
+                    char *rs = GETSTR(r);
+                
+                    return MKINT((i_int)(strcmp(ls, rs) < 0));
+                }
+                
+       ##### -> VAL idris_streq(VM* vm, VAL l, VAL r) {
+                    char *ls = GETSTR(l);
+                    char *rs = GETSTR(r);
+                
+                    return MKINT((i_int)(strcmp(ls, rs) == 0));
+                }
+                
+       ##### -> VAL idris_strlen(VM* vm, VAL l) {
+                    return MKINT((i_int)(strlen(GETSTR(l))));
+                }
+                
+                #define BUFSIZE 256
+                
+       ##### -> VAL idris_readStr(VM* vm, FILE* h) {
+                // Modified from 'safe-fgets.c' in the gdb distribution.
+                // (see http://www.gnu.org/software/gdb/current/)
+                    char *line_ptr;
+                    char* line_buf = (char *) malloc (BUFSIZE);
+                    int line_buf_size = BUFSIZE;
+                
+                    /* points to last byte */
+                    line_ptr = line_buf + line_buf_size - 1;
+                
+                    /* so we can see if fgets put a 0 there */
+                    *line_ptr = 1;
+                    if (fgets (line_buf, line_buf_size, h) == 0)
+                        return MKSTR(vm, "");
+                
+                    /* we filled the buffer? */
+                    while (line_ptr[0] == 0 && line_ptr[-1] != '\n')
+                    {
+                        /* Make the buffer bigger and read more of the line */
+                        line_buf_size += BUFSIZE;
+                        line_buf = (char *) realloc (line_buf, line_buf_size);
+                
+                        /* points to last byte again */
+                        line_ptr = line_buf + line_buf_size - 1;
+                        /* so we can see if fgets put a 0 there */
+                        *line_ptr = 1;
+                
+                        if (fgets (line_buf + line_buf_size - BUFSIZE - 1, BUFSIZE + 1, h) == 0)
+                           return MKSTR(vm, "");
+                    }
+                
+                    VAL str = MKSTR(vm, line_buf);
+                    free(line_buf);
+                    return str;
+                }
+                
+       ##### -> VAL idris_strHead(VM* vm, VAL str) {
+                    return MKINT((i_int)(GETSTR(str)[0]));
+                }
+                
+       ##### -> VAL idris_strTail(VM* vm, VAL str) {
+                    return MKSTR(vm, GETSTR(str)+1);
+                }
+                
+       ##### -> VAL idris_strCons(VM* vm, VAL x, VAL xs) {
+                    char *xstr = GETSTR(xs);
+                    Closure* cl = allocate(vm, sizeof(Closure) +
+                                               strlen(xstr) + 2, 0);
+                    SETTY(cl, STRING);
+                    cl -> info.str = (char*)cl + sizeof(Closure);
+                    cl -> info.str[0] = (char)(GETINT(x));
+                    strcpy(cl -> info.str+1, xstr);
+                    return cl;
+                }
+                
+       ##### -> VAL idris_strIndex(VM* vm, VAL str, VAL i) {
+                    return MKINT((i_int)(GETSTR(str)[GETINT(i)]));
+                }
+                
+       ##### -> VAL idris_strRev(VM* vm, VAL str) {
+                    char *xstr = GETSTR(str);
+                    Closure* cl = allocate(vm, sizeof(Closure) +
+                                               strlen(xstr) + 1, 0);
+                    SETTY(cl, STRING);
+                    cl -> info.str = (char*)cl + sizeof(Closure);
+                    int y = 0;
+                    int x = strlen(xstr);
+                
+                    cl-> info.str[x+1] = '\0';
+                    while(x>0) {
+                        cl -> info.str[y++] = xstr[--x];
+                    }
+                    return cl;
+                }
+                
+                typedef struct {
+                    VM* vm; // thread's VM
+                    VM* callvm; // calling thread's VM
+                    func fn;
+                    VAL arg;
+                } ThreadData;
+                
+       ##### -> void* runThread(void* arg) {
+                    ThreadData* td = (ThreadData*)arg;
+                    VM* vm = td->vm;
+                    VM* callvm = td->callvm;
+                
+                    TOP(0) = td->arg;
+                    BASETOP(0);
+                    ADDTOP(1);
+                    td->fn(vm, NULL);
+                    callvm->processes--;
+                
+                    free(td);
+                    terminate(vm);
+                    return NULL;
+                }
+                
+       ##### -> void* vmThread(VM* callvm, func f, VAL arg) {
+                    VM* vm = init_vm(callvm->stack_max - callvm->valstack, callvm->heap_size, 
+                                     callvm->max_threads,
+                                     0, NULL);
+                    vm->processes=1; // since it can send and receive messages
+                    pthread_t t;
+                    pthread_attr_t attr;
+                //    size_t stacksize;
+                
+                    pthread_attr_init(&attr);
+                //    pthread_attr_getstacksize (&attr, &stacksize);
+                //    pthread_attr_setstacksize (&attr, stacksize*64);
+                
+                    ThreadData *td = malloc(sizeof(ThreadData));
+                    td->vm = vm;
+                    td->callvm = callvm;
+                    td->fn = f;
+                    td->arg = copyTo(vm, arg);
+                    
+                    callvm->processes++;
+                
+                    pthread_create(&t, &attr, runThread, td);
+                //    usleep(100);
+                    return vm;
+                }
+                
+                // VM is assumed to be a different vm from the one x lives on 
+                
+       ##### -> VAL copyTo(VM* vm, VAL x) {
+                    int i, ar;
+                    VAL* argptr;
+                    Closure* cl;
+                    if (x==NULL || ISINT(x)) {
+                        return x;
+                    }
+                    switch(GETTY(x)) {
+                    case CON:
+                        ar = CARITY(x);
+                        allocCon(cl, vm, CTAG(x), ar, 1);
+                
+                        argptr = (VAL*)(cl->info.c.args);
+                        for(i = 0; i < ar; ++i) {
+                            *argptr = copyTo(vm, *((VAL*)(x->info.c.args)+i)); // recursive version
+                            argptr++;
+                        }
+                        break;
+                    case FLOAT:
+                        cl = MKFLOATc(vm, x->info.f);
+                        break;
+                    case STRING:
+                        cl = MKSTRc(vm, x->info.str);
+                        break;
+                    case BIGINT:
+                        cl = MKBIGMc(vm, x->info.ptr);
+                        break;
+                    case PTR:
+                        cl = MKPTRc(vm, x->info.ptr);
+                        break;
+                    default:
+                        assert(0); // We're in trouble if this happens...
+                    }
+                    return cl;
+                }
+                
+                // Add a message to another VM's message queue
+       ##### -> void idris_sendMessage(VM* sender, VM* dest, VAL msg) {
+                    // FIXME: If GC kicks in in the middle of the copy, we're in trouble.
+                    // Probably best check there is enough room in advance. (How?)
+                
+                    // Also a problem if we're allocating at the same time as the 
+                    // destination thread (which is very likely)
+                    // Should the inbox be a different memory space?
+                    
+                    // So: we try to copy, if a collection happens, we do the copy again
+                    // under the assumption there's enough space this time.
+                
+                    int gcs = dest->collections;
+                    pthread_mutex_lock(&dest->alloc_lock); 
+                    VAL dmsg = copyTo(dest, msg);
+                    pthread_mutex_unlock(&dest->alloc_lock); 
+                
+                    if (dest->collections>gcs) {
+                        // a collection will have invalidated the copy
+                        pthread_mutex_lock(&dest->alloc_lock); 
+                        dmsg = copyTo(dest, msg); // try again now there's room...
+                        pthread_mutex_unlock(&dest->alloc_lock); 
+                    }
+                
+                    pthread_mutex_lock(&(dest->inbox_lock));
+                    *(dest->inbox_write) = dmsg;
+                   
+                    dest->inbox_write++;
+                    if (dest->inbox_write >= dest->inbox_end) {
+                        dest->inbox_write = dest->inbox;
+                    }
+                
+                    if (dest->inbox_write == dest->inbox_ptr) {
+                        fprintf(stderr, "Inbox full"); // Maybe grow it instead...
+                        exit(-1);
+                    }
+                
+                    // Wake up the other thread
+                    pthread_mutex_lock(&dest->inbox_block);
+                    pthread_cond_signal(&dest->inbox_waiting);
+                    pthread_mutex_unlock(&dest->inbox_block);
+                
+                //    printf("Sending [signalled]...\n");
+                
+                    pthread_mutex_unlock(&(dest->inbox_lock));
+                //    printf("Sending [unlock]...\n");
+                }
+                
+       ##### -> int idris_checkMessages(VM* vm) {
+                    VAL msg = *(vm->inbox_ptr);
+                    return (msg != NULL);
+                }
+                
+                // block until there is a message in the queue
+       ##### -> VAL idris_recvMessage(VM* vm) {
+                    VAL msg;
+                    struct timespec timeout;
+                    int status;
+                
+                    pthread_mutex_lock(&vm->inbox_block);
+                    msg = *(vm->inbox_ptr);
+                    while (msg == NULL) {
+                //        printf("No message yet\n");
+                //        printf("Waiting [lock]...\n");
+                        timeout.tv_sec = time (NULL) + 3;
+                        timeout.tv_nsec = 0;
+                        status = pthread_cond_timedwait(&vm->inbox_waiting, &vm->inbox_block,
+                                               &timeout);
+                        (void)(status); //don't emit 'unused' warning
+                //        printf("Waiting [unlock]... %d\n", status);
+                        msg = *(vm->inbox_ptr);
+                    }
+                    pthread_mutex_unlock(&vm->inbox_block);
+                
+                    if (msg != NULL) {
+                        pthread_mutex_lock(&(vm->inbox_lock));
+                        *(vm->inbox_ptr) = NULL;
+                        vm->inbox_ptr++;
+                        if (vm->inbox_ptr >= vm->inbox_end) {
+                            vm->inbox_ptr = vm->inbox;
+                        }
+                        pthread_mutex_unlock(&(vm->inbox_lock));
+                    } else {
+                        fprintf(stderr, "No messages waiting");
+                        exit(-1);
+                    }
+                
+                    return msg;
+                }
+                
+       ##### -> int idris_numArgs(VM* vm) {
+                    return vm->argc;
+                }
+                
+       ##### -> VAL idris_getArg(VM* vm, int i) {
+                    return vm->argv[i];
+                }
+                
+       ##### -> void stackOverflow() {
+                  fprintf(stderr, "Stack overflow");
+                  exit(-1);
+                }
+                
+
+
+Top 10 Lines:
+
+     Line      Count
+
+       79   16048449
+      171    8641974
+      178    8641974
+      154        115
+      130          3
+      257          1
+
+Execution Summary:
+
+       36   Executable lines in this file
+       36   Lines executed
+   100.00   Percent of the file executed
+
+ 33332516   Total number of line executions
+925903.22   Average executions per line

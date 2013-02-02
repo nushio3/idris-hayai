@@ -1,0 +1,411 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls   s/call   s/call  name    
+ 17.98      0.28     0.28 22222221     0.00     0.00  _idris__123_EVAL0_125_
+ 14.06      0.49     0.22 16048449     0.00     0.00  allocate
+ 12.42      0.68     0.19  3703703     0.00     0.00  _idris_Builtins_46_boolElim
+ 11.77      0.86     0.18  1234568     0.00     0.00  _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33_compare
+  8.50      0.99     0.13  1234568     0.00     0.00  _idris_Main_46_sumAcc
+  6.54      1.09     0.10  3703703     0.00     0.00  _idris_Builtins_46_intToBool
+  4.90      1.17     0.08  1234567     0.00     0.00  _idris_Main_46__123_sumAcc1_125_
+  4.58      1.24     0.07  1234567     0.00     0.00  _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare3_125_
+  4.25      1.30     0.07  8641974     0.00     0.00  SLIDE
+  3.92      1.36     0.06  1234568     0.00     0.00  _idris_Builtins_46__124__124_
+  1.96      1.39     0.03  2469136     0.00     0.00  idris_bigEq
+  1.96      1.42     0.03  2467395     0.00     0.00  GETBIG
+  1.96      1.45     0.03  1233697     0.00     0.00  bigAdd
+  1.31      1.47     0.02  1234568     0.00     0.00  _idris__123__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33__60_109_125_
+  0.98      1.49     0.02  1234567     0.00     0.00  _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare2_125_
+  0.65      1.50     0.01  8641974     0.00     0.00  PROJECT
+  0.65      1.51     0.01  1234567     0.00     0.00  idris_bigLt
+  0.65      1.52     0.01  1234567     0.00     0.00  idris_bigPlus
+  0.33      1.52     0.01                             MKPTRc
+  0.33      1.53     0.01                             _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare1_125_
+  0.33      1.53     0.01                             runThread
+  0.00      1.53     0.00  1234567     0.00     0.00  idris_bigMinus
+  0.00      1.53     0.00     2415     0.00     0.00  copy
+  0.00      1.53     0.00      230     0.00     0.00  MKBIGMc
+  0.00      1.53     0.00      115     0.00     0.00  MKSTRc
+  0.00      1.53     0.00      115     0.00     0.00  cheney
+  0.00      1.53     0.00      115     0.00     0.00  idris_gc
+  0.00      1.53     0.00        3     0.00     0.00  MKSTR
+  0.00      1.53     0.00        1     0.00     0.00  _idris_Main_46__123_sumAcc0_125_
+  0.00      1.53     0.00        1     0.00     1.30  _idris_Main_46_main
+  0.00      1.53     0.00        1     0.00     0.00  _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare0_125_
+  0.00      1.53     0.00        1     0.00     0.22  _idris_run_95__95_IO
+  0.00      1.53     0.00        1     0.00     0.00  idris_castBigStr
+  0.00      1.53     0.00        1     0.00     0.00  idris_concat
+  0.00      1.53     0.00        1     0.00     0.00  putStr
+
+ %         the percentage of the total running time of the
+time       program used by this function.
+
+cumulative a running sum of the number of seconds accounted
+ seconds   for by this function and those listed above it.
+
+ self      the number of seconds accounted for by this
+seconds    function alone.  This is the major sort for this
+           listing.
+
+calls      the number of times this function was invoked, if
+           this function is profiled, else blank.
+ 
+ self      the average number of milliseconds spent in this
+ms/call    function per call, if this function is profiled,
+	   else blank.
+
+ total     the average number of milliseconds spent in this
+ms/call    function and its descendents per call, if this 
+	   function is profiled, else blank.
+
+name       the name of the function.  This is the minor sort
+           for this listing. The index shows the location of
+	   the function in the gprof listing. If the index is
+	   in parenthesis it shows where it would appear in
+	   the gprof listing if it were to be printed.
+
+		     Call graph (explanation follows)
+
+
+granularity: each sample hit covers 2 byte(s) for 0.65% of 1.53 seconds
+
+index % time    self  children    called     name
+                                                 <spontaneous>
+[1]     99.0    0.00    1.52                 _idris__123_runMain0_125_ [1]
+                0.00    1.30       1/1           _idris_Main_46_main [3]
+                0.00    0.22       1/1           _idris_run_95__95_IO [6]
+                0.00    0.00       1/8641974     SLIDE [14]
+-----------------------------------------------
+[2]     99.0    1.10    0.42       7+37037026 <cycle 1 as a whole> [2]
+                0.28    0.06 22222221             _idris__123_EVAL0_125_ <cycle 1> [4]
+                0.18    0.06 1234568             _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33_compare <cycle 1> [5]
+                0.19    0.00 3703703             _idris_Builtins_46_boolElim <cycle 1> [9]
+                0.13    0.06 1234568             _idris_Main_46_sumAcc <cycle 1> [10]
+                0.08    0.11 1234567             _idris_Main_46__123_sumAcc1_125_ <cycle 1> [11]
+                0.10    0.05 3703703             _idris_Builtins_46_intToBool <cycle 1> [12]
+                0.07    0.05 1234567             _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare3_125_ <cycle 1> [13]
+                0.06    0.00 1234568             _idris_Builtins_46__124__124_ <cycle 1> [15]
+                0.02    0.02 1234568             _idris__123__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33__60_109_125_ <cycle 1> [19]
+-----------------------------------------------
+                0.00    1.30       1/1           _idris__123_runMain0_125_ [1]
+[3]     84.9    0.00    1.30       1         _idris_Main_46_main [3]
+                0.63    0.24       4/7           _idris__123_EVAL0_125_ <cycle 1> [4]
+                0.16    0.06       1/7           _idris_Builtins_46_boolElim <cycle 1> [9]
+                0.16    0.06       1/7           _idris_Main_46_sumAcc <cycle 1> [10]
+                0.00    0.00       2/3           MKSTR [27]
+                0.00    0.00       1/1           idris_castBigStr [28]
+                0.00    0.00       1/1           idris_concat [29]
+                0.00    0.00       1/1           putStr [38]
+-----------------------------------------------
+                             1234568             _idris__123__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33__60_109_125_ <cycle 1> [19]
+                             1234568             _idris_Builtins_46__124__124_ <cycle 1> [15]
+                             2469134             _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare3_125_ <cycle 1> [13]
+                             2469136             _idris_Main_46_sumAcc <cycle 1> [10]
+                             2469136             _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33_compare <cycle 1> [5]
+                             3703703             _idris_Builtins_46_intToBool <cycle 1> [12]
+                             3703703             _idris_Builtins_46_boolElim <cycle 1> [9]
+                             4938268             _idris_Main_46__123_sumAcc1_125_ <cycle 1> [11]
+                0.16    0.06       1/7           _idris_run_95__95_IO [6]
+                0.63    0.24       4/7           _idris_Main_46_main [3]
+[4]     22.1    0.28    0.06 22222221         _idris__123_EVAL0_125_ <cycle 1> [4]
+                0.02    0.02 1234567/1234567     _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare2_125_ [20]
+                0.03    0.00 3703703/8641974     SLIDE [14]
+                0.00    0.00 3703703/8641974     PROJECT [22]
+                0.00    0.00       1/1           _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare0_125_ [31]
+                0.00    0.00       1/1           _idris_Main_46__123_sumAcc0_125_ [103]
+                             2469134             _idris_Builtins_46_boolElim <cycle 1> [9]
+                             1234567             _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare3_125_ <cycle 1> [13]
+                             1234567             _idris_Main_46_sumAcc <cycle 1> [10]
+                             1234567             _idris_Main_46__123_sumAcc1_125_ <cycle 1> [11]
+-----------------------------------------------
+                             1234568             _idris_Main_46_sumAcc <cycle 1> [10]
+[5]     15.5    0.18    0.06 1234568         _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33_compare <cycle 1> [5]
+                0.03    0.00 2469136/16047644     allocate <cycle 2> [8]
+                0.02    0.00 1234568/2469136     idris_bigEq [21]
+                0.01    0.00 1234568/8641974     SLIDE [14]
+                             2469136             _idris__123_EVAL0_125_ <cycle 1> [4]
+                             1234568             _idris_Builtins_46_intToBool <cycle 1> [12]
+-----------------------------------------------
+                0.00    0.22       1/1           _idris__123_runMain0_125_ [1]
+[6]     14.1    0.00    0.22       1         _idris_run_95__95_IO [6]
+                0.16    0.06       1/7           _idris__123_EVAL0_125_ <cycle 1> [4]
+-----------------------------------------------
+[7]     14.1    0.22    0.00 16047644+3795    <cycle 2 as a whole> [7]
+                0.22    0.00 16048449             allocate <cycle 2> [8]
+                0.00    0.00    2415             copy <cycle 2> [33]
+                0.00    0.00     230             MKBIGMc <cycle 2> [34]
+                0.00    0.00     115             idris_gc <cycle 2> [37]
+                0.00    0.00     115             cheney <cycle 2> [36]
+                0.00    0.00     115             MKSTRc <cycle 2> [35]
+-----------------------------------------------
+                                 115             MKSTRc <cycle 2> [35]
+                                 230             MKBIGMc <cycle 2> [34]
+                                 460             copy <cycle 2> [33]
+                0.00    0.00       1/16047644     _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare0_125_ [31]
+                0.00    0.00       1/16047644     idris_concat [29]
+                0.00    0.00       3/16047644     MKSTR [27]
+                0.02    0.00 1233697/16047644     bigAdd [18]
+                0.02    0.00 1233698/16047644     GETBIG [17]
+                0.02    0.00 1234567/16047644     _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare2_125_ [20]
+                0.02    0.00 1234568/16047644     _idris__123__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33__60_109_125_ <cycle 1> [19]
+                0.03    0.00 2469134/16047644     _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare3_125_ <cycle 1> [13]
+                0.03    0.00 2469136/16047644     _idris_Main_46_sumAcc <cycle 1> [10]
+                0.03    0.00 2469136/16047644     _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33_compare <cycle 1> [5]
+                0.05    0.00 3703703/16047644     _idris_Builtins_46_intToBool <cycle 1> [12]
+[8]     14.1    0.22    0.00 16048449         allocate <cycle 2> [8]
+                                 115             idris_gc <cycle 2> [37]
+-----------------------------------------------
+                             1234568             _idris_Main_46_sumAcc <cycle 1> [10]
+                             2469134             _idris__123_EVAL0_125_ <cycle 1> [4]
+                0.16    0.06       1/7           _idris_Main_46_main [3]
+[9]     12.7    0.19    0.00 3703703         _idris_Builtins_46_boolElim <cycle 1> [9]
+                0.00    0.00 3703703/8641974     PROJECT [22]
+                             3703703             _idris__123_EVAL0_125_ <cycle 1> [4]
+-----------------------------------------------
+                             1234567             _idris__123_EVAL0_125_ <cycle 1> [4]
+                0.16    0.06       1/7           _idris_Main_46_main [3]
+[10]    12.2    0.13    0.06 1234568         _idris_Main_46_sumAcc <cycle 1> [10]
+                0.03    0.00 2469136/16047644     allocate <cycle 2> [8]
+                0.02    0.00 1234568/2469136     idris_bigEq [21]
+                0.01    0.00 1234568/8641974     SLIDE [14]
+                             2469136             _idris__123_EVAL0_125_ <cycle 1> [4]
+                             1234568             _idris_Builtins_46_boolElim <cycle 1> [9]
+                             1234568             _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33_compare <cycle 1> [5]
+                             1234568             _idris__123__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33__60_109_125_ <cycle 1> [19]
+                             1234568             _idris_Builtins_46_intToBool <cycle 1> [12]
+                             1234568             _idris_Builtins_46__124__124_ <cycle 1> [15]
+-----------------------------------------------
+                             1234567             _idris__123_EVAL0_125_ <cycle 1> [4]
+[11]    12.2    0.08    0.11 1234567         _idris_Main_46__123_sumAcc1_125_ <cycle 1> [11]
+                0.01    0.05 1234567/1234567     idris_bigPlus [16]
+                0.03    0.02 1233697/1233697     bigAdd [18]
+                0.01    0.00 1234567/8641974     SLIDE [14]
+                0.00    0.00 1234567/1234567     idris_bigMinus [32]
+                             4938268             _idris__123_EVAL0_125_ <cycle 1> [4]
+-----------------------------------------------
+                             1234567             _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare3_125_ <cycle 1> [13]
+                             1234568             _idris_Main_46_sumAcc <cycle 1> [10]
+                             1234568             _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33_compare <cycle 1> [5]
+[12]     9.8    0.10    0.05 3703703         _idris_Builtins_46_intToBool <cycle 1> [12]
+                0.05    0.00 3703703/16047644     allocate <cycle 2> [8]
+                             3703703             _idris__123_EVAL0_125_ <cycle 1> [4]
+-----------------------------------------------
+                             1234567             _idris__123_EVAL0_125_ <cycle 1> [4]
+[13]     8.0    0.07    0.05 1234567         _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare3_125_ <cycle 1> [13]
+                0.03    0.00 2469134/16047644     allocate <cycle 2> [8]
+                0.01    0.00 1234567/1234567     idris_bigLt [23]
+                0.01    0.00 1234567/8641974     SLIDE [14]
+                             2469134             _idris__123_EVAL0_125_ <cycle 1> [4]
+                             1234567             _idris_Builtins_46_intToBool <cycle 1> [12]
+-----------------------------------------------
+                0.00    0.00       1/8641974     _idris__123_runMain0_125_ [1]
+                0.01    0.00 1234567/8641974     _idris_Main_46__123_sumAcc1_125_ <cycle 1> [11]
+                0.01    0.00 1234567/8641974     _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare3_125_ <cycle 1> [13]
+                0.01    0.00 1234568/8641974     _idris_Main_46_sumAcc <cycle 1> [10]
+                0.01    0.00 1234568/8641974     _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33_compare <cycle 1> [5]
+                0.03    0.00 3703703/8641974     _idris__123_EVAL0_125_ <cycle 1> [4]
+[14]     4.2    0.07    0.00 8641974         SLIDE [14]
+-----------------------------------------------
+                             1234568             _idris_Main_46_sumAcc <cycle 1> [10]
+[15]     4.0    0.06    0.00 1234568         _idris_Builtins_46__124__124_ <cycle 1> [15]
+                0.00    0.00 1234568/8641974     PROJECT [22]
+                             1234568             _idris__123_EVAL0_125_ <cycle 1> [4]
+-----------------------------------------------
+                0.01    0.05 1234567/1234567     _idris_Main_46__123_sumAcc1_125_ <cycle 1> [11]
+[16]     3.7    0.01    0.05 1234567         idris_bigPlus [16]
+                0.03    0.02 2467394/2467395     GETBIG [17]
+-----------------------------------------------
+                0.00    0.00       1/2467395     idris_castBigStr [28]
+                0.03    0.02 2467394/2467395     idris_bigPlus [16]
+[17]     3.0    0.03    0.02 2467395         GETBIG [17]
+                0.02    0.00 1233698/16047644     allocate <cycle 2> [8]
+-----------------------------------------------
+                0.03    0.02 1233697/1233697     _idris_Main_46__123_sumAcc1_125_ <cycle 1> [11]
+[18]     3.0    0.03    0.02 1233697         bigAdd [18]
+                0.02    0.00 1233697/16047644     allocate <cycle 2> [8]
+-----------------------------------------------
+                             1234568             _idris_Main_46_sumAcc <cycle 1> [10]
+[19]     2.4    0.02    0.02 1234568         _idris__123__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33__60_109_125_ <cycle 1> [19]
+                0.02    0.00 1234568/16047644     allocate <cycle 2> [8]
+                             1234568             _idris__123_EVAL0_125_ <cycle 1> [4]
+-----------------------------------------------
+                0.02    0.02 1234567/1234567     _idris__123_EVAL0_125_ <cycle 1> [4]
+[20]     2.1    0.02    0.02 1234567         _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare2_125_ [20]
+                0.02    0.00 1234567/16047644     allocate <cycle 2> [8]
+-----------------------------------------------
+                0.02    0.00 1234568/2469136     _idris_Main_46_sumAcc <cycle 1> [10]
+                0.02    0.00 1234568/2469136     _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33_compare <cycle 1> [5]
+[21]     2.0    0.03    0.00 2469136         idris_bigEq [21]
+-----------------------------------------------
+                0.00    0.00 1234568/8641974     _idris_Builtins_46__124__124_ <cycle 1> [15]
+                0.00    0.00 3703703/8641974     _idris__123_EVAL0_125_ <cycle 1> [4]
+                0.00    0.00 3703703/8641974     _idris_Builtins_46_boolElim <cycle 1> [9]
+[22]     0.7    0.01    0.00 8641974         PROJECT [22]
+-----------------------------------------------
+                0.01    0.00 1234567/1234567     _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare3_125_ <cycle 1> [13]
+[23]     0.7    0.01    0.00 1234567         idris_bigLt [23]
+-----------------------------------------------
+                                                 <spontaneous>
+[24]     0.3    0.01    0.00                 MKPTRc [24]
+-----------------------------------------------
+                                                 <spontaneous>
+[25]     0.3    0.01    0.00                 runThread [25]
+-----------------------------------------------
+                                                 <spontaneous>
+[26]     0.3    0.01    0.00                 _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare1_125_ [26]
+-----------------------------------------------
+                0.00    0.00       1/3           init_vm [30]
+                0.00    0.00       2/3           _idris_Main_46_main [3]
+[27]     0.0    0.00    0.00       3         MKSTR [27]
+                0.00    0.00       3/16047644     allocate <cycle 2> [8]
+-----------------------------------------------
+                0.00    0.00       1/1           _idris_Main_46_main [3]
+[28]     0.0    0.00    0.00       1         idris_castBigStr [28]
+                0.00    0.00       1/2467395     GETBIG [17]
+-----------------------------------------------
+                0.00    0.00       1/1           _idris_Main_46_main [3]
+[29]     0.0    0.00    0.00       1         idris_concat [29]
+                0.00    0.00       1/16047644     allocate <cycle 2> [8]
+-----------------------------------------------
+                                                 <spontaneous>
+[30]     0.0    0.00    0.00                 init_vm [30]
+                0.00    0.00       1/3           MKSTR [27]
+-----------------------------------------------
+                0.00    0.00       1/1           _idris__123_EVAL0_125_ <cycle 1> [4]
+[31]     0.0    0.00    0.00       1         _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare0_125_ [31]
+                0.00    0.00       1/16047644     allocate <cycle 2> [8]
+-----------------------------------------------
+                0.00    0.00 1234567/1234567     _idris_Main_46__123_sumAcc1_125_ <cycle 1> [11]
+[32]     0.0    0.00    0.00 1234567         idris_bigMinus [32]
+-----------------------------------------------
+                                 575             cheney <cycle 2> [36]
+                                1840             idris_gc <cycle 2> [37]
+[33]     0.0    0.00    0.00    2415         copy <cycle 2> [33]
+                                 460             allocate <cycle 2> [8]
+                                 230             MKBIGMc <cycle 2> [34]
+                                 115             MKSTRc <cycle 2> [35]
+-----------------------------------------------
+                                 230             copy <cycle 2> [33]
+[34]     0.0    0.00    0.00     230         MKBIGMc <cycle 2> [34]
+                                 230             allocate <cycle 2> [8]
+-----------------------------------------------
+                                 115             copy <cycle 2> [33]
+[35]     0.0    0.00    0.00     115         MKSTRc <cycle 2> [35]
+                                 115             allocate <cycle 2> [8]
+-----------------------------------------------
+                                 115             idris_gc <cycle 2> [37]
+[36]     0.0    0.00    0.00     115         cheney <cycle 2> [36]
+                                 575             copy <cycle 2> [33]
+-----------------------------------------------
+                                 115             allocate <cycle 2> [8]
+[37]     0.0    0.00    0.00     115         idris_gc <cycle 2> [37]
+                                1840             copy <cycle 2> [33]
+                                 115             cheney <cycle 2> [36]
+-----------------------------------------------
+                0.00    0.00       1/1           _idris_Main_46_main [3]
+[38]     0.0    0.00    0.00       1         putStr [38]
+-----------------------------------------------
+                0.00    0.00       1/1           _idris__123_EVAL0_125_ <cycle 1> [4]
+[103]    0.0    0.00    0.00       1         _idris_Main_46__123_sumAcc0_125_ [103]
+-----------------------------------------------
+
+ This table describes the call tree of the program, and was sorted by
+ the total amount of time spent in each function and its children.
+
+ Each entry in this table consists of several lines.  The line with the
+ index number at the left hand margin lists the current function.
+ The lines above it list the functions that called this function,
+ and the lines below it list the functions this one called.
+ This line lists:
+     index	A unique number given to each element of the table.
+		Index numbers are sorted numerically.
+		The index number is printed next to every function name so
+		it is easier to look up where the function is in the table.
+
+     % time	This is the percentage of the `total' time that was spent
+		in this function and its children.  Note that due to
+		different viewpoints, functions excluded by options, etc,
+		these numbers will NOT add up to 100%.
+
+     self	This is the total amount of time spent in this function.
+
+     children	This is the total amount of time propagated into this
+		function by its children.
+
+     called	This is the number of times the function was called.
+		If the function called itself recursively, the number
+		only includes non-recursive calls, and is followed by
+		a `+' and the number of recursive calls.
+
+     name	The name of the current function.  The index number is
+		printed after it.  If the function is a member of a
+		cycle, the cycle number is printed between the
+		function's name and the index number.
+
+
+ For the function's parents, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the function into this parent.
+
+     children	This is the amount of time that was propagated from
+		the function's children into this parent.
+
+     called	This is the number of times this parent called the
+		function `/' the total number of times the function
+		was called.  Recursive calls to the function are not
+		included in the number after the `/'.
+
+     name	This is the name of the parent.  The parent's index
+		number is printed after it.  If the parent is a
+		member of a cycle, the cycle number is printed between
+		the name and the index number.
+
+ If the parents of the function cannot be determined, the word
+ `<spontaneous>' is printed in the `name' field, and all the other
+ fields are blank.
+
+ For the function's children, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the child into the function.
+
+     children	This is the amount of time that was propagated from the
+		child's children to the function.
+
+     called	This is the number of times the function called
+		this child `/' the total number of times the child
+		was called.  Recursive calls by the child are not
+		listed in the number after the `/'.
+
+     name	This is the name of the child.  The child's index
+		number is printed after it.  If the child is a
+		member of a cycle, the cycle number is printed
+		between the name and the index number.
+
+ If there are any cycles (circles) in the call graph, there is an
+ entry for the cycle-as-a-whole.  This entry shows who called the
+ cycle (as parents) and the members of the cycle (as children.)
+ The `+' recursive calls entry shows the number of function calls that
+ were internal to the cycle, and the calls entry for each member shows,
+ for that member, how many times it was called from other members of
+ the cycle.
+
+
+Index by function name
+
+  [17] GETBIG                 [10] _idris_Main_46_sumAcc  [21] idris_bigEq
+  [34] MKBIGMc                 [4] _idris__123_EVAL0_125_ [23] idris_bigLt
+  [24] MKPTRc                 [19] _idris__123__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33__60_109_125_ [32] idris_bigMinus
+  [27] MKSTR                  [31] _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare0_125_ [16] idris_bigPlus
+  [35] MKSTRc                 [26] _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare1_125_ [28] idris_castBigStr
+  [22] PROJECT                [20] _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare2_125_ [29] idris_concat
+  [14] SLIDE                  [13] _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__123__35__33_compare3_125_ [37] idris_gc
+  [15] _idris_Builtins_46__124__124_ [5] _idris__64_Builtins_46_Ord_36__91_Integer_93__46_0_46_Builtins_46__35__33_compare [38] putStr
+   [9] _idris_Builtins_46_boolElim [6] _idris_run_95__95_IO [25] runThread
+  [12] _idris_Builtins_46_intToBool [8] allocate           [2] <cycle 1>
+ [103] _idris_Main_46__123_sumAcc0_125_ [18] bigAdd        [7] <cycle 2>
+  [11] _idris_Main_46__123_sumAcc1_125_ [36] cheney
+   [3] _idris_Main_46_main    [33] copy

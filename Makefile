@@ -6,6 +6,9 @@ sum-hs:
 sum-idr:
 	idris sum.idr -o sum-idr
 
+sum-gen-idr:
+	idris sum-gen.idr -o sum-gen-idr
+
 sum-idr-prof:
 	cd rts_orig/ && make
 	idris sum.idr -S -o sum-idr.c

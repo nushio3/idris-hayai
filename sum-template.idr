@@ -8,4 +8,4 @@ sumUpto n = sumAcc n 0
 
 main : IO ()
 main = do
-  print $ sumUpto <<<N>>>
+  print $ sumUpto <<<n>>>

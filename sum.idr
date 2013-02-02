@@ -7,4 +7,5 @@ sumUpto : Integer -> Integer
 sumUpto n = sumAcc n 0
 
 main : IO ()
-main = print $ sumUpto 1234567
+main = do
+  print $ sumUpto 1234567

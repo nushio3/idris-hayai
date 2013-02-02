@@ -1,5 +1,3 @@
-IDRIS_DIR=$(shell echo ${HOME}/.cabal/share/idris-*/)
-
 all: sum-hs sum-idr
 
 sum-hs:
@@ -11,8 +9,7 @@ sum-idr:
 sum-idr-prof:
 	cd rts_orig/ && make
 	idris sum.idr -S -o sum-idr.c
-	gcc -pg -O2 -c sum-idr.c -I${IDRIS_DIR}/rts
-	gcc -o sum-idr-prof sum-idr.o rts_orig/libidris_rts.a -pthread -lgmp
+	gcc -pg -O2 -o sum-idr-prof sum-idr.c ./rts_orig/idris_main.c -I./rts_orig -pthread -lgmp
 
 clean:
 	cd rts_orig/ && make clean

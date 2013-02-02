@@ -21,7 +21,7 @@ main = do
   forM (map (2^) [0..20]) $ \n ->do
     writeFile "sum-gen.idr" $
       replace "<<<n>>>" (show n) idrisTemplate
-    system "make sum-gen-idr"
+    system "idris sum-gen.idr -o sum-gen-idr"
     beginTime <- getCurrentTime
     (_, hOut,_,_) <- runInteractiveCommand "./sum-gen-idr"
     outStr <- hGetContents hOut
@@ -35,6 +35,8 @@ main = do
     putStr outStr2
     endTime2 <- getCurrentTime
 
+    when ((read outStr :: Integer) /= read outStr2) $
+      error "unmatch"
     let diffUTC  =diffUTCTime endTime beginTime
         diff, diff2 :: Double
         diff  = fromRational $ toRational diffUTC

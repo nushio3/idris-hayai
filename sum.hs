@@ -1,7 +1,8 @@
 
-factori :: Int -> Int -> Int
-factori n accum = if n <=0 then accum else factori (n-1) $ n+accum
-facto :: Int -> Int
-facto n = factori n 0
+sumAcc :: Int -> Int -> Int
+sumAcc n accum = if n <=0 then accum else sumAcc (n-1) $ n+accum
 
-main = print $ facto 1234567
+sumUpto :: Int -> Int
+sumUpto n = sumAcc n 0
+
+main = print $ sumUpto 1234567

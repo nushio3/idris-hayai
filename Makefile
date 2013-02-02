@@ -1,12 +1,12 @@
 all: sum-hs sum-idr
 
-sum-hs:
+sum-hs: sum.hs
 	ghc --make -O2 sum.hs -o sum-hs
 
-sum-idr:
+sum-idr: sum.idr
 	idris sum.idr -o sum-idr
 
-sum-gen-idr:
+sum-gen-idr: sum-gen.idr
 	idris sum-gen.idr -o sum-gen-idr
 
 sum-idr-prof:
